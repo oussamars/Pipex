@@ -46,15 +46,3 @@ Second, create a pipe and execute cat < file1 | wc -l.
 Third, parse paths for commands using PATH env.
 Finally, handle errors and edge cases.
 
-chacklist for teh mandatory before moving to the bonus
-Checklist Before Moving to Bonus (Mandatory Part)
- Pipe creation with error handling
- Forking with error handling
- Child process (cmd1 < infile -> pipe)
- Parent process (pipe -> cmd2 > outfile)
- Dup2 and proper file descriptor redirection
- Execvp with error handling
- Freeing ft_split() memory
- Handling invalid commands and files
- Wait for child process
- Clean up main by splitting into functions (Optional but recommended)
