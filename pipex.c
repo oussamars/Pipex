@@ -41,10 +41,10 @@ char *check_path(char *cmd, char **env)
 
     while (env[i] && ft_strncmp("PATH=", env[i], 5) != 0)
         i++;
-    if (!env[i])
+    if (env[i] == NULL)
         return (NULL);
     array = ft_split(env[i] + 5, ':');
-    if (!array)
+    if (array == NULL)
         return (NULL);
     i = 0;
     while (array[i])
@@ -52,7 +52,7 @@ char *check_path(char *cmd, char **env)
         cmd_slash = ft_strjoin_1(array[i], "/");
         join = ft_strjoin_1(cmd_slash, cmd);
         free(cmd_slash);
-        if (access(join, X_OK | F_OK) == 0)
+        if (access(join, F_OK | X_OK) == 0)
         {
             free_split(array);
             return (join);
@@ -75,7 +75,7 @@ int    child_case(int *fds, char **av, char **env)
             return (1);
         }
         close(fds[0]);
-        char **cmd1 = ft_split(av[2], ' ');
+        char **cmd1 = ft_split(av[2], ' ');//should i handle errors if the space is not the delimiter
         if (cmd1 == NULL || cmd1[0] == NULL)
         {
             perror("Invalid command or command split failed");
@@ -87,7 +87,7 @@ int    child_case(int *fds, char **av, char **env)
         path = check_path(cmd1[0], env);
         if (path == NULL)
         {
-            printf("command not found");
+            perror("command not found");
             free_split(cmd1);
             return 1;
         }
@@ -103,7 +103,7 @@ int parent_case(int *fds, char **av, char **env)
     int fd_out = open(av[4], O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if(fd_out == -1)
     {
-        printf("Error opening outfile\n");
+        perror("Error opening outfile\n");
         return (1);
     }
     wait(NULL);
@@ -120,7 +120,7 @@ int parent_case(int *fds, char **av, char **env)
     if (path == NULL)
     {
         free_split(cmd2);
-        printf("command not found");
+        perror("command not found");
         return 1;
     }
     execve(path, cmd2, env);
@@ -131,21 +131,21 @@ int parent_case(int *fds, char **av, char **env)
 }
 int main(int ac, char **av, char **env)
 {
-    if (ac != 5)
+    if (ac < 5)
     {
-        printf("you need to enter all the params needed.\n");
+        perror("you need to enter all the params needed.\n");
         return (1);
     }
    int fds[2];
    if (pipe(fds) == -1)
         perror("pipe");
-   int id = fork();
-   if (id == -1)
+   int pid = fork();
+   if (pid == -1)
    {
         perror("fork");
         return (1);
    }
-   if(id == 0)
+   if(pid == 0)
     child_case(fds, av, env);
    else
         parent_case(fds, av, env);

@@ -46,3 +46,14 @@ Second, create a pipe and execute cat < file1 | wc -l.
 Third, parse paths for commands using PATH env.
 Finally, handle errors and edge cases.
 
+BONUS :
+
+Support Multiple Commands: For bonus functionality, you’ll need to modify your program to handle multiple 
+commands in the pipeline. You will need to create more pipes dynamically based on the number of commands.
+
+Manage Multiple Forks: Instead of just forking once, you will need to fork once for each command in the 
+pipeline.
+
+Handle the Final Output: You'll need to handle multiple outputs correctly, especially if the output is to 
+be redirected to a file. For example, in a case like ./pipex infile "ls -l" "grep foo" "wc -l" outfile, the 
+final output of all commands should be written to outfile.
