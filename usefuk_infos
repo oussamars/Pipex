@@ -1,0 +1,60 @@
+fd[0] is for the read
+fd[1] is for the write
+access() checks whether the program can access the file pathname. 
+in the begining work with execvp because its easyer and after you will work with the one they provided
+start with this command : < file1 cat | wc > file2
+
+
+Steps : 
+Open file1 for reading.
+Redirect file1 to stdin (use dup2).
+Execute cmd1 using execve.
+Once that works, add the second command:
+Create a pipe.
+Fork a child process.
+Child executes cmd1, and its output goes into the pipe.
+Parent reads from the pipe and executes cmd2.
+🛠️ Step 3: Get the Smallest Working Version
+Write a minimal main.c like this:
+
+Open file1.
+Create a pipe.
+Fork a child.
+In the child:
+Redirect file1 to stdin with dup2().
+Redirect pipe[1] to stdout with dup2().
+Execute cmd1 with execve().
+In the parent:
+Close the unused ends of the pipe.
+Fork again.
+Redirect pipe[0] to stdin.
+Redirect file2 to stdout.
+Execute cmd2.
+🛠️ Step 5: Lookup Paths for Commands
+Instead of hardcoding /bin/cat or /usr/bin/wc, you need to:
+
+Get the PATH environment variable.
+Search for the right path for cmd1 and cmd2.
+🛠️ Step 6: Once it Works – Handle Errors & Cleanup
+Check every open(), pipe(), fork(), execve() return value.
+Free memory if you allocate it.
+Close all file descriptors.
+🏁 Final Thought:
+✔️ Small Steps to Follow:
+First, open a file and execute cat < file1.
+Second, create a pipe and execute cat < file1 | wc -l.
+Third, parse paths for commands using PATH env.
+Finally, handle errors and edge cases.
+
+chacklist for teh mandatory before moving to the bonus
+Checklist Before Moving to Bonus (Mandatory Part)
+ Pipe creation with error handling
+ Forking with error handling
+ Child process (cmd1 < infile -> pipe)
+ Parent process (pipe -> cmd2 > outfile)
+ Dup2 and proper file descriptor redirection
+ Execvp with error handling
+ Freeing ft_split() memory
+ Handling invalid commands and files
+ Wait for child process
+ Clean up main by splitting into functions (Optional but recommended)
