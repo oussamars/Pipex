@@ -75,7 +75,7 @@ int    child_case(int *fds, char **av, char **env)
             return (1);
         }
         close(fds[0]);
-        char **cmd1 = ft_split(av[2], ' ');//should i handle errors if the space is not the delimiter
+        char **cmd1 = ft_split(av[2], ' ');
         if (cmd1 == NULL || cmd1[0] == NULL)
         {
             perror("Invalid command or command split failed");
@@ -97,7 +97,7 @@ int    child_case(int *fds, char **av, char **env)
         free_split(cmd1);
         return (1);
 }
-int parent_case(int *fds, char **av, char **env)
+int second_child(int *fds, char **av, char **env)
 {
     char *path;
     int fd_out = open(av[4], O_WRONLY | O_CREAT | O_TRUNC, 0644);
@@ -124,30 +124,45 @@ int parent_case(int *fds, char **av, char **env)
         return 1;
     }
     execve(path, cmd2, env);
-    perror("Execve parent fail");
+    perror("Execve child fail");
     free(path);
     free_split(cmd2);
     return 1;
 }
 int main(int ac, char **av, char **env)
 {
+   int fds[2];
+    int pid1;
+    int pid2;
     if (ac < 5)
     {
         perror("you need to enter all the params needed.\n");
         return (1);
     }
-   int fds[2];
    if (pipe(fds) == -1)
+   {
         perror("pipe");
-   int pid = fork();
-   if (pid == -1)
+        return (1);
+   }
+   pid1 = fork();
+   if (pid1 == -1)
    {
         perror("fork");
         return (1);
    }
-   if(pid == 0)
-    child_case(fds, av, env);
-   else
-        parent_case(fds, av, env);
+   if (pid1 == 0)
+        child_case(fds, av, env);
+    pid2 = fork();
+    if (pid2 == -1)
+    {
+        perror("fork");
+        return (1);
+    }
+    if (pid2 == 0)
+        second_child(fds, av, env);
+    close(fds[0]);
+    close(fds[1]);
+    waitpid(pid1, NULL, 0);
+    waitpid(pid2, NULL, 0);
     return (0);
 }
