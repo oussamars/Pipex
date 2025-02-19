@@ -6,7 +6,7 @@
 /*   By: oboussel <oboussel@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/15 11:37:56 by oboussel          #+#    #+#             */
-/*   Updated: 2025/02/15 16:51:27 by oboussel         ###   ########.fr       */
+/*   Updated: 2025/02/19 15:41:55 by oboussel         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,7 +55,7 @@ static char	*ft_copy(char const *s, char c)
 	return (array);
 }
 
-static void	free_split(char **array, size_t j)
+void	free_split_1(char **array, size_t j)
 {
 	while (j > 0)
 	{
@@ -84,7 +84,7 @@ char	**ft_split(char const *s, char c)
 		{
 			array[j] = ft_copy(s, c);
 			if (array[j++] == NULL)
-				return (free_split(array, j - 1), NULL);
+				return (free_split_1(array, j - 1), NULL);
 			while (*s != c && *s != '\0')
 				s++;
 		}

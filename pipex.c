@@ -2,7 +2,6 @@
 #include "pipex.h"
 #include "get_next_line/get_next_line.h"
 
-char	**ft_split(char const *s, char c);
 void free_split(char **split)
 {
     int i = 0;
@@ -68,34 +67,36 @@ char *check_path(char *cmd, char **env)
 int    child_case(int *fds, char **av, char **env)
 {
     char *path;
-    int fd = open(av[1], O_RDONLY);
-        if (fd == -1)
-        {
-            perror("open infile");
-            return (1);
-        }
-        close(fds[0]);
-        char **cmd1 = ft_split(av[2], ' ');
-        if (cmd1 == NULL || cmd1[0] == NULL)
-        {
-            perror("Invalid command or command split failed");
-            return (1);
-        }
-        dup2(fd, 0);
-        dup2(fds[1], 1);
-        close(fds[1]);
-        path = check_path(cmd1[0], env);
-        if (path == NULL)
-        {
-            perror("command not found");
-            free_split(cmd1);
-            return 1;
-        }
-        execve(path, cmd1, env);
-        perror("Execve child fail");
-        free(path);
-        free_split(cmd1);
+    int fd;
+
+    fd = open(av[1], O_RDONLY);
+    if (fd == -1)
+    {
+        perror("open infile");
         return (1);
+    }
+    close(fds[0]);
+    char **cmd1 = ft_split(av[2], ' ');
+    if (cmd1 == NULL || cmd1[0] == NULL)
+    {
+        perror("Invalid command or command split failed");
+        return (1);
+    }
+    dup2(fd, 0);
+    dup2(fds[1], 1);
+    close(fds[1]);
+    path = check_path(cmd1[0], env);
+    if (path == NULL)
+    {
+        perror("command not found");
+        free_split(cmd1);
+        return 1;
+    }
+    execve(path, cmd1, env);
+    perror("Execve child fail");
+    free(path);
+    free_split(cmd1);
+    exit(1);
 }
 int second_child(int *fds, char **av, char **env)
 {
@@ -127,8 +128,9 @@ int second_child(int *fds, char **av, char **env)
     perror("Execve child fail");
     free(path);
     free_split(cmd2);
-    return 1;
+    exit(1);
 }
+
 int main(int ac, char **av, char **env)
 {
    int fds[2];
@@ -139,30 +141,38 @@ int main(int ac, char **av, char **env)
         perror("you need to enter all the params needed.\n");
         return (1);
     }
-   if (pipe(fds) == -1)
+   if (ft_strcmp("here_doc", av[1]) == 0)
    {
-        perror("pipe");
-        return (1);
+        if (here_doc(ac, av, env) == 1)
+            return 1;
    }
-   pid1 = fork();
-   if (pid1 == -1)
+   else
    {
-        perror("fork");
-        return (1);
-   }
-   if (pid1 == 0)
-        child_case(fds, av, env);
-    pid2 = fork();
-    if (pid2 == -1)
+    if (pipe(fds) == -1)
     {
-        perror("fork");
-        return (1);
+            perror("pipe");
+            return (1);
     }
-    if (pid2 == 0)
-        second_child(fds, av, env);
-    close(fds[0]);
-    close(fds[1]);
-    waitpid(pid1, NULL, 0);
-    waitpid(pid2, NULL, 0);
+    pid1 = fork();
+    if (pid1 == -1)
+    {
+            perror("fork");
+            return (1);
+    }
+    if (pid1 == 0)
+            child_case(fds, av, env);
+        pid2 = fork();
+        if (pid2 == -1)
+        {
+            perror("fork");
+            return (1);
+        }
+        if (pid2 == 0)
+            second_child(fds, av, env);
+        close(fds[0]);
+        close(fds[1]);
+        waitpid(pid1, NULL, 0);
+        waitpid(pid2, NULL, 0);
+   }
     return (0);
 }

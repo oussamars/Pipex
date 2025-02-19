@@ -6,7 +6,7 @@
 /*   By: oboussel <oboussel@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/19 09:08:45 by oboussel          #+#    #+#             */
-/*   Updated: 2025/02/15 16:50:15 by oboussel         ###   ########.fr       */
+/*   Updated: 2025/02/19 15:44:42 by oboussel         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,7 +28,7 @@ char	*get_next_line(int fd);
 size_t	ft_strlen(const char *s);
 char	*ft_strdup_1(const char *s);
 char	*ft_strchr(const char *s, int c);
-int		ft_strcmp(char *s1, char *s2);
+int     ft_strcmp(const char *s1, const char *s2);
 char	*ft_substr(char const *s, unsigned int start, size_t len);
 
 #endif
