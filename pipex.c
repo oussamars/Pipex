@@ -64,78 +64,69 @@ char *check_path(char *cmd, char **env)
 }
 
 
-int    child_case(int *fds, char **av, char **env)
+int    child(int i, int ac, int prev_pipe, int fds[2], char **av, char **env)
 {
-    char *path;
-    int fd;
+    char    *path;
+    int     fd;
+    char    **cmd;
 
-    fd = open(av[1], O_RDONLY);
-    if (fd == -1)
+    if (i == 0)
     {
-        perror("open infile");
-        return (1);
+        fd = open(av[1], O_RDONLY);
+        if (fd == -1)
+        {
+            perror("open infile");
+            return (1);
+        }
+        dup2(fd, 0);
+        dup2(fds[1], 1);
+    }
+    else if (i == ac - 4)
+    {
+        fd = open(av[ac - 1], O_WRONLY | O_CREAT | O_TRUNC, 0644);
+        if (fd == -1)
+        {
+            perror("outfile");
+            return 1;
+        }
+        dup2(prev_pipe, 0);
+        dup2(fd, 1);
+    }
+    else
+    {
+        dup2(prev_pipe, 0);
+        dup2(fds[1], 1);
     }
     close(fds[0]);
-    char **cmd1 = ft_split(av[2], ' ');
-    if (cmd1 == NULL || cmd1[0] == NULL)
+    close(fds[1]);
+    cmd = ft_split(av[i + 2], ' ');
+    if (cmd == NULL || cmd[0] == NULL)
     {
         perror("Invalid command or command split failed");
         return (1);
     }
-    dup2(fd, 0);
-    dup2(fds[1], 1);
-    close(fds[1]);
-    path = check_path(cmd1[0], env);
+    path = check_path(cmd[0], env);
     if (path == NULL)
     {
         perror("command not found");
-        free_split(cmd1);
+        free_split(cmd);
         return 1;
     }
-    execve(path, cmd1, env);
+    execve(path, cmd, env);
     perror("Execve child fail");
     free(path);
-    free_split(cmd1);
-    exit(1);
-}
-int second_child(int *fds, char **av, char **env)
-{
-    char *path;
-    int fd_out = open(av[4], O_WRONLY | O_CREAT | O_TRUNC, 0644);
-    if(fd_out == -1)
-    {
-        perror("Error opening outfile\n");
-        return (1);
-    }
-    wait(NULL);
-    close(fds[1]);
-    char **cmd2 = ft_split(av[3], ' ');
-    if (cmd2 == NULL || cmd2[0] == NULL)
-    {
-        perror("Invalid command or command split failed");
-        return (1);
-    }
-    dup2(fds[0], 0);
-    dup2(fd_out, 1);
-    path = check_path(cmd2[0], env);
-    if (path == NULL)
-    {
-        free_split(cmd2);
-        perror("command not found");
-        return 1;
-    }
-    execve(path, cmd2, env);
-    perror("Execve child fail");
-    free(path);
-    free_split(cmd2);
+    free_split(cmd);
     exit(1);
 }
 
 int main(int ac, char **av, char **env)
 {
-   int fds[2];
-    int pid1;
-    int pid2;
+    int fds[2];
+    int i = 0;
+    int pid;
+    int prev_pipe;
+    
+    prev_pipe = -1;
     if (ac < 5)
     {
         perror("you need to enter all the params needed.\n");
@@ -148,31 +139,31 @@ int main(int ac, char **av, char **env)
    }
    else
    {
-    if (pipe(fds) == -1)
+    while (i < ac - 3)
     {
+        if (i != ac - 4 && pipe(fds) == -1)
+        {
             perror("pipe");
             return (1);
-    }
-    pid1 = fork();
-    if (pid1 == -1)
-    {
-            perror("fork");
-            return (1);
-    }
-    if (pid1 == 0)
-            child_case(fds, av, env);
-        pid2 = fork();
-        if (pid2 == -1)
+        }
+        pid = fork();
+        if (pid == -1)
         {
             perror("fork");
             return (1);
         }
-        if (pid2 == 0)
-            second_child(fds, av, env);
-        close(fds[0]);
+        if (pid == 0)
+        {
+            if (child(i, ac, prev_pipe, fds, av, env) == 1)
+                return 1;
+        }
+        if (prev_pipe != -1)
+            close(prev_pipe);
+        prev_pipe = fds[0];
         close(fds[1]);
-        waitpid(pid1, NULL, 0);
-        waitpid(pid2, NULL, 0);
+        i++;
+    }
    }
+    while (wait(NULL) > 0);
     return (0);
 }

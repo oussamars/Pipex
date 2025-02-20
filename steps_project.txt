@@ -57,3 +57,7 @@ pipeline.
 Handle the Final Output: You'll need to handle multiple outputs correctly, especially if the output is to 
 be redirected to a file. For example, in a case like ./pipex infile "ls -l" "grep foo" "wc -l" outfile, the 
 final output of all commands should be written to outfile.
+
+For the first command, set stdin to av[1] (infile) and stdout to the first pipe.
+For the middle commands, set stdin to the previous pipe and stdout to the next pipe.
+For the last command, set stdin to the last pipe and stdout to the output file.
