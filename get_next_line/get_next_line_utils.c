@@ -6,7 +6,7 @@
 /*   By: oboussel <oboussel@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/19 09:07:36 by oboussel          #+#    #+#             */
-/*   Updated: 2025/02/06 12:46:35 by oboussel         ###   ########.fr       */
+/*   Updated: 2025/02/24 13:55:53 by oboussel         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,7 @@ size_t	ft_strlen(const char *s)
 	return (i);
 }
 
-char	*ft_strdup_1(const char *s)
+char	*ft_strdup(const char *s)
 {
 	int		i;
 	char	*dest;
@@ -51,7 +51,7 @@ char	*ft_substr(char const *s, unsigned int start, size_t len)
 		return (NULL);
 	s_len = ft_strlen(s);
 	if (start >= s_len)
-		return (ft_strdup_1(""));
+		return (ft_strdup(""));
 	if (len > s_len - start)
 		len = s_len - start;
 	str = (char *)malloc(len + 1);
@@ -66,7 +66,7 @@ char	*ft_substr(char const *s, unsigned int start, size_t len)
 	return (str);
 }
 
-char	*ft_strjoin_1(char const *s1, char const *s2)
+char	*ft_strjoin(char const *s1, char const *s2)
 {
 	int		totale_size;
 	char	*res;

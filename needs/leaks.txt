@@ -1,0 +1,3 @@
+valgrind ./pipex infile "" "wc -l" outfile in bonus && mandatory 8 still reachable
+
+valgrind ./pipex here_doc LIMITER "" "wc -l" outfile

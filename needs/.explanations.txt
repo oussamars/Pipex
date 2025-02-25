@@ -1,0 +1,2 @@
+waitpid(pid1, &status, 0); Wait for the first child to finish and store its exit status.
+if (WIFEXITED(status)) : If the second child finished normally, return its exit status code.

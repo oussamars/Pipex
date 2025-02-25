@@ -1,169 +1,128 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   pipex.c                                            :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: oboussel <oboussel@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/02/23 15:06:36 by oboussel          #+#    #+#             */
+/*   Updated: 2025/02/25 09:25:39 by oboussel         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 #include "pipex.h"
-#include "get_next_line/get_next_line.h"
 
-void free_split(char **split)
+char	*check_path(char *cmd, char **env)
 {
-    int i = 0;
-    while (split[i])
-    {
-        free(split[i]);
-        i++;
-    }
-    free(split);
-}
-int	ft_strncmp(const char *s1, const char *s2, size_t n)
-{
-	size_t	i;
+	int		i;
+	char	**paths;
+	char	*path;
+	char	*cmd_path;
 
+	if (cmd[0] == '/' || cmd[0] == '.')
+		return (slash_cmd(cmd));
 	i = 0;
-	if (n == 0)
-		return (0);
-	while (i < n)
-	{
-		if (s1[i] == '\0' || s2[i] == '\0')
-			return ((unsigned char)s1[i] - (unsigned char)s2[i]);
-		if (s1[i] != s2[i])
-			return ((unsigned char)s1[i] - (unsigned char)s2[i]);
+	while (env[i] && ft_strncmp("PATH=", env[i], 5) != 0)
 		i++;
+	if (!env[i])
+		return (NULL);
+	paths = ft_split(env[i] + 5, ':');
+	i = 0;
+	while (paths[i])
+	{
+		path = ft_strjoin(paths[i++], "/");
+		cmd_path = ft_strjoin(path, cmd);
+		free(path);
+		if (access(cmd_path, F_OK | X_OK) == 0)
+			return (free_split(paths), cmd_path);
+		free(cmd_path);
 	}
+	return (free_split(paths), NULL);
+}
+
+void	execute_command(char **cmd, char **env)
+{
+	char	*path;
+
+	path = check_path(cmd[0], env);
+	if (!path)
+	{
+		ft_putstr_fd("zsh: command not found: ", 2);
+		ft_putendl_fd(cmd[0], 2);
+		free_split(cmd);
+		exit(127);
+	}
+	execve(path, cmd, env);
+	perror("execve");
+	free(path);
+	free_split(cmd);
+	exit(1);
+}
+
+void	handle_child(int i, int fds[2], char **av, char **env)
+{
+	int		fd;
+	char	**cmd;
+
+	if (i == 0)
+	{
+		fd = open(av[1], O_RDONLY);
+		if (fd == -1)
+			error_child(av[1]);
+		dup2(fd, 0);
+		dup2(fds[1], 1);
+	}
+	else
+	{
+		fd = open(av[4], O_WRONLY | O_CREAT | O_TRUNC, 0644);
+		if (fd == -1)
+			error_child(av[4]);
+		dup2(fds[0], 0);
+		dup2(fd, 1);
+	}
+	close(fds[0]);
+	close(fds[1]);
+	cmd = ft_split(av[i + 2], ' ');
+	if (!cmd || !cmd[0])
+		permission_case(cmd);
+	execute_command(cmd, env);
+}
+
+int	pipex(int ac, char **av, char **env)
+{
+	int	fds[2];
+	int	pid1;
+	int	pid2;
+	int	status;
+
+	(void)ac;
+	if (pipe(fds) == -1)
+		return (perror("pipe"), 1);
+	pid1 = fork();
+	if (pid1 == -1)
+		return (perror("fork"), 1);
+	if (pid1 == 0)
+		handle_child(0, fds, av, env);
+	pid2 = fork();
+	if (pid2 == -1)
+		return (perror("fork"), 1);
+	if (pid2 == 0)
+		handle_child(1, fds, av, env);
+	close(fds[0]);
+	close(fds[1]);
+	waitpid(pid1, &status, 0);
+	waitpid(pid2, &status, 0);
+	if (WIFEXITED(status))
+		return (WEXITSTATUS(status));
 	return (0);
 }
 
-
-char *check_path(char *cmd, char **env)
+int	main(int ac, char **av, char **env)
 {
-    int i = 0;
-    char **array;
-    char *join;
-    char *cmd_slash;
-
-    while (env[i] && ft_strncmp("PATH=", env[i], 5) != 0)
-        i++;
-    if (env[i] == NULL)
-        return (NULL);
-    array = ft_split(env[i] + 5, ':');
-    if (array == NULL)
-        return (NULL);
-    i = 0;
-    while (array[i])
-    {
-        cmd_slash = ft_strjoin_1(array[i], "/");
-        join = ft_strjoin_1(cmd_slash, cmd);
-        free(cmd_slash);
-        if (access(join, F_OK | X_OK) == 0)
-        {
-            free_split(array);
-            return (join);
-        }
-        free(join);
-        i++;
-    }
-    free_split(array);
-    return (NULL);
-}
-
-
-int    child(int i, int ac, int prev_pipe, int fds[2], char **av, char **env)
-{
-    char    *path;
-    int     fd;
-    char    **cmd;
-
-    if (i == 0)
-    {
-        fd = open(av[1], O_RDONLY);
-        if (fd == -1)
-        {
-            perror("open infile");
-            return (1);
-        }
-        dup2(fd, 0);
-        dup2(fds[1], 1);
-    }
-    else if (i == ac - 4)
-    {
-        fd = open(av[ac - 1], O_WRONLY | O_CREAT | O_TRUNC, 0644);
-        if (fd == -1)
-        {
-            perror("outfile");
-            return 1;
-        }
-        dup2(prev_pipe, 0);
-        dup2(fd, 1);
-    }
-    else
-    {
-        dup2(prev_pipe, 0);
-        dup2(fds[1], 1);
-    }
-    close(fds[0]);
-    close(fds[1]);
-    cmd = ft_split(av[i + 2], ' ');
-    if (cmd == NULL || cmd[0] == NULL)
-    {
-        perror("Invalid command or command split failed");
-        return (1);
-    }
-    path = check_path(cmd[0], env);
-    if (path == NULL)
-    {
-        perror("command not found");
-        free_split(cmd);
-        return 1;
-    }
-    execve(path, cmd, env);
-    perror("Execve child fail");
-    free(path);
-    free_split(cmd);
-    exit(1);
-}
-
-int main(int ac, char **av, char **env)
-{
-    int fds[2];
-    int i = 0;
-    int pid;
-    int prev_pipe;
-    
-    prev_pipe = -1;
-    if (ac < 5)
-    {
-        perror("you need to enter all the params needed.\n");
-        return (1);
-    }
-   if (ft_strcmp("here_doc", av[1]) == 0)
-   {
-        if (here_doc(ac, av, env) == 1)
-            return 1;
-   }
-   else
-   {
-    while (i < ac - 3)
-    {
-        if (i != ac - 4 && pipe(fds) == -1)
-        {
-            perror("pipe");
-            return (1);
-        }
-        pid = fork();
-        if (pid == -1)
-        {
-            perror("fork");
-            return (1);
-        }
-        if (pid == 0)
-        {
-            if (child(i, ac, prev_pipe, fds, av, env) == 1)
-                return 1;
-        }
-        if (prev_pipe != -1)
-            close(prev_pipe);
-        prev_pipe = fds[0];
-        close(fds[1]);
-        i++;
-    }
-   }
-    while (wait(NULL) > 0);
-    return (0);
+	if (ac != 5)
+	{
+		ft_putstr_fd("Enter all the arguments\n", 2);
+		return (1);
+	}
+	return (pipex(ac, av, env));
 }

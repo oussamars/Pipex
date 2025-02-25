@@ -6,7 +6,7 @@
 /*   By: oboussel <oboussel@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/22 17:29:32 by oboussel          #+#    #+#             */
-/*   Updated: 2025/02/06 12:46:39 by oboussel         ###   ########.fr       */
+/*   Updated: 2025/02/24 13:55:43 by oboussel         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,7 @@ static char	*join_free(char *stock, char *buffer)
 {
 	char	*temp;
 
-	temp = ft_strjoin_1(stock, buffer);
+	temp = ft_strjoin(stock, buffer);
 	free(stock);
 	stock = NULL;
 	return (temp);
@@ -44,7 +44,7 @@ static char	*ft_join(char *stock, int fd)
 	ssize_t	bytes_read;
 
 	if (!stock)
-		stock = ft_strdup_1("");
+		stock = ft_strdup("");
 	buffer = malloc((size_t)BUFFER_SIZE + 1);
 	if (buffer == NULL)
 		return (NULL);
