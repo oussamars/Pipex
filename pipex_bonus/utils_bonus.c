@@ -6,7 +6,7 @@
 /*   By: oboussel <oboussel@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/23 15:07:42 by oboussel          #+#    #+#             */
-/*   Updated: 2025/02/25 09:53:36 by oboussel         ###   ########.fr       */
+/*   Updated: 2025/02/26 10:28:04 by oboussel         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,6 +45,7 @@ char	*get_cmd_path(char *cmd, char **paths)
 		free(cmd_path);
 		i++;
 	}
+	free_split(paths);
 	return (NULL);
 }
 

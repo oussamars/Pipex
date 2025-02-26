@@ -6,7 +6,7 @@
 /*   By: oboussel <oboussel@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/25 10:44:11 by oboussel          #+#    #+#             */
-/*   Updated: 2025/02/25 10:44:25 by oboussel         ###   ########.fr       */
+/*   Updated: 2025/02/26 10:31:26 by oboussel         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,11 @@ void	open_outfile(t_pipex *pipex)
 {
 	int	fd;
 
-	fd = open(pipex->argv[pipex->argc - 1], O_WRONLY | O_CREAT | O_TRUNC, 0644);
+	if (ft_strcmp(pipex->argv[pipex->argc - 1], "/dev/stdout") == 0)
+		fd = 1;
+	else
+		fd = open(pipex->argv[pipex->argc - 1], O_WRONLY | O_CREAT | O_TRUNC,
+				0644);
 	if (fd == -1)
 	{
 		perror("open outfile");
@@ -39,7 +43,8 @@ void	open_outfile(t_pipex *pipex)
 	}
 	dup2(pipex->prev_pipe, 0);
 	dup2(fd, 1);
-	close(fd);
+	if (fd != 1)
+		close(fd);
 }
 
 void	setup_child_io(int i, t_pipex *pipex)
